@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager</title>
+    <style>
+        /* CSS — the skin */
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 40px auto;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .task {
+            background: white;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .task.done span {
+            text-decoration: line-through;
+            color: #999;
+        }
+        .add-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+        button {
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .btn-add      { background: #4CAF50; color: white; }
+        .btn-complete { background: #2196F3; color: white; }
+        .btn-delete   { background: #f44336; color: white; }
+    </style>
+</head>
+<body>
+
+    <h1>📝 Task Manager</h1>
+
+    <!-- ADD TASK BOX -->
+    <div class="add-box">
+        <input type="text" id="taskInput" placeholder="What needs to be done?">
+        <button class="btn-add" onclick="addTask()">➕ Add</button>
+    </div>
+
+    <!-- TASKS LIST -->
+    <div id="taskList"></div>
+
+    <script>
+        // YOUR RAILWAY URL
+        const API = "https://web-production-585bd.up.railway.app";
+
+        // ─────────────────────────────────
+        // LOAD ALL TASKS
+        // ─────────────────────────────────
+        async function loadTasks() {
+            const response = await fetch(API + "/tasks");
+            const tasks = await response.json();
+            const list = document.getElementById("taskList");
+            list.innerHTML = "";
+
+            if (tasks.length === 0) {
+                list.innerHTML = "<p style='text-align:center;color:#999'>No tasks yet! Add one above ☝️</p>";
+                return;
+            }
+
+            tasks.forEach(task => {
+                list.innerHTML += `
+                    <div class="task ${task.done ? 'done' : ''}">
+                        <span>${task.id}. ${task.title}</span>
+                        <div>
+                            <button class="btn-complete" onclick="completeTask(${task.id})">✓</button>
+                            <button class="btn-delete"   onclick="deleteTask(${task.id})">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // ─────────────────────────────────
+        // ADD A TASK
+        // ─────────────────────────────────
+        async function addTask() {
+            const input = document.getElementById("taskInput");
+            const title = input.value.trim();
+            if (!title) return alert("Please enter a task!");
+
+            await fetch(API + "/tasks", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ title: title })
+            });
+
+            input.value = "";
+            loadTasks();
+        }
+
+        // ─────────────────────────────────
+        // COMPLETE A TASK
+        // ─────────────────────────────────
+        async function completeTask(id) {
+            await fetch(API + "/tasks/" + id, { method: "PUT" });
+            loadTasks();
+        }
+
+        // ─────────────────────────────────
+        // DELETE A TASK
+        // ─────────────────────────────────
+        async function deleteTask(id) {
+            await fetch(API + "/tasks/" + id, { method: "DELETE" });
+            loadTasks();
+        }
+
+        // Load tasks when page opens
+        loadTasks();
+    </script>
+
+</body>
+</html>

@@ -1,7 +1,11 @@
 from flask import Flask, jsonify, request
 from database import create_table, add_task, list_tasks, complete_task, delete_task, get_task
+from flask_cors import CORS
+
+
 
 app = Flask(__name__)
+CORS(app)
 create_table()   # create table when server starts
 
 @app.route("/tasks", methods=["GET"])
